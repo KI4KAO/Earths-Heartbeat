@@ -1,0 +1,13 @@
+<resources>
+    <style name="Theme.Heartbeat" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowBackground">@color/black</item>
+    </style>
+
+    <!-- Splash uses the first splash image as the window background so there is
+         zero white flash before the activity draws. -->
+    <style name="Theme.Heartbeat.Splash" parent="Theme.Heartbeat">
+        <item name="android:windowBackground">@drawable/splash1_window</item>
+    </style>
+</resources>

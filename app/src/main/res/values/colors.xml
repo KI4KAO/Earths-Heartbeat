@@ -1,0 +1,8 @@
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="green">#FF00FF66</color>
+    <color name="green_dim">#FF0C7A3A</color>
+    <color name="cyan">#FF00E5FF</color>
+    <color name="magenta">#FFFF2BD6</color>
+    <color name="panel">#EE040E06</color>
+</resources>

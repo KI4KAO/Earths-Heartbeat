@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Earth\'s Heartbeat</string>
+    <string name="open_browser">Open ki4kao.net</string>
+    <string name="add_widget">Add widget</string>
+    <string name="refresh">Refresh</string>
+    <string name="widget_pick_title">Pick a feed for this widget</string>
+    <string name="widget_add">Add to home screen</string>
+    <string name="widget_loading">Loading…</string>
+</resources>

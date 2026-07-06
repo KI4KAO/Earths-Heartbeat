@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_refresh" android:title="@string/refresh"
+        android:showAsAction="never" />
+    <item android:id="@+id/action_browser" android:title="@string/open_browser"
+        android:showAsAction="never" />
+    <item android:id="@+id/action_add_widget" android:title="@string/add_widget"
+        android:showAsAction="never" />
+</menu>

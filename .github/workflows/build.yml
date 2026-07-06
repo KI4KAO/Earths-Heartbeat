@@ -1,0 +1,102 @@
+name: Build Earth's Heartbeat APK
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Pull the real icon + splash images from ki4kao.net. If a download
+      # fails, the committed placeholder stays in place so the build never
+      # breaks.
+      - name: Fetch app assets
+        run: |
+          set +e
+          RES=app/src/main/res
+          curl -fsSL "https://ki4kao.net/eh/1.png" -o /tmp/1.png \
+            && cp /tmp/1.png "$RES/drawable-nodpi/splash1.png" \
+            && cp /tmp/1.png "$RES/drawable-nodpi/ic_launcher.png" \
+            && cp /tmp/1.png "$RES/mipmap-xxxhdpi/ic_launcher.png" \
+            && echo "icon/splash1 updated from 1.png" \
+            || echo "WARN: 1.png fetch failed, keeping placeholder"
+          curl -fsSL "https://ki4kao.net/eh/2.jpg" -o /tmp/2.jpg \
+            && cp /tmp/2.jpg "$RES/drawable-nodpi/splash2.jpg" \
+            && echo "splash2 updated from 2.jpg" \
+            || echo "WARN: 2.jpg fetch failed, keeping placeholder"
+          exit 0
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # Optional signed release: add a base64 keystore + secrets to get a
+      # STABLE signature so updates install over the previous version.
+      # Without these secrets the workflow builds a debug APK (still installs
+      # fine when sideloading, but signature changes each run).
+      - name: Decode keystore (if provided)
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > app/heartbeat.keystore
+            echo "have_keystore=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "have_keystore=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build signed release APK
+        if: steps.keystore.outputs.have_keystore == 'true'
+        env:
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=heartbeat.keystore \
+            -Pandroid.injected.signing.store.password="$KS_PASS" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASS"
+          echo "APK_PATH=$(find app/build/outputs/apk/release -name '*.apk' | head -1)" >> "$GITHUB_ENV"
+
+      - name: Build debug APK (no keystore)
+        if: steps.keystore.outputs.have_keystore != 'true'
+        run: |
+          ./gradlew assembleDebug
+          echo "APK_PATH=$(find app/build/outputs/apk/debug -name '*.apk' | head -1)" >> "$GITHUB_ENV"
+
+      - name: Rename to Earth's Heartbeat.apk
+        run: |
+          mkdir -p dist
+          cp "$APK_PATH" "dist/Earth's Heartbeat.apk"
+          ls -la dist
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Earths-Heartbeat-apk
+          path: dist/Earth's Heartbeat.apk
+
+      - name: Attach APK to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Earth's Heartbeat.apk
